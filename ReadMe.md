@@ -1,6 +1,5 @@
-========================================================================
-    WIN32 APPLICATION : Event2keyWM Project Overview
-========================================================================
+
+#WIN32 APPLICATION : Event2keyWM Project Overview
 
 Application that rewrites the registry entries for the center scan button
 and then watches the new events to issue a Key press
@@ -31,13 +30,13 @@ then uses keybd_event to simulate a keypress (KeyDown and KeyUp) for the defined
 
 ##Configuration
 
-================================================
-REGEDIT4
-[HKEY_LOCAL_MACHINE\Software\Intermec\Event2Key]
-"mapToVKEY"=dword:0000000D
-"eventName"="Event1"
-================================================
+    REGEDIT4
+    [HKEY_LOCAL_MACHINE\Software\Intermec\Event2Key]
+    "mapToVKEY"=dword:0000000D
+    "eventName"="Event1"
+
 mapToVKEY is the value of the VKEY to be fired
+
 eventName is the standard name of the event entries used by the center
 scan button
 
@@ -51,4 +50,3 @@ Start a registry editor and change the registry back to
 	Drivers\HID\ClientDrivers\ITCKeyboard\Layout\CN75AN5-Numeric\0001\Events\State:Event1=StateLeft
 
 
-/////////////////////////////////////////////////////////////////////////////s
