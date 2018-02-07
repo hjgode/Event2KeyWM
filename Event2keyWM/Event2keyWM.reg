@@ -1,0 +1,6 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\Software\Intermec\Event2Key]
+"mapToVKEY"=dword:0000000D
+"eventName"="Event1"
+
