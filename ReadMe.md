@@ -1,10 +1,10 @@
 
-#WIN32 APPLICATION : Event2keyWM Project Overview
+# WIN32 APPLICATION : Event2keyWM Project Overview
 
 Application that rewrites the registry entries for the center scan button
 and then watches the new events to issue a Key press
 
-##Installation
+## Installation
 
 Copy DEMO_MapScanKey.cab to the device and start FileBrowser to locate 
 DEMO_MapScanKey.cab. Then tap on DEMO_MapScanKey.cab to start the installation.
@@ -13,7 +13,7 @@ After installation start the app once manually using Start-Programs-Eevent2KeyWM
 Then warm boot the device to activate the changes. The DEMO application will be
 autostarted using the Windows\StartUp folder.
 
-##Example
+## Example
 
 The default registry for the center scan button is
 
@@ -28,7 +28,7 @@ The application changes those to
 Now, whenever the center scan button is pressed, the application sees the DeltaMappedToKey event and 
 then uses keybd_event to simulate a keypress (KeyDown and KeyUp) for the defined VKEY value.
 
-##Configuration
+## Configuration
 
     REGEDIT4
     [HKEY_LOCAL_MACHINE\Software\Intermec\Event2Key]
@@ -40,7 +40,7 @@ mapToVKEY is the value of the VKEY to be fired
 eventName is the standard name of the event entries used by the center
 scan button
 
-##Uninstall
+## Uninstall
 
 Go to Start-Settings-System-Remove Programs and remove "hsm DEMO MapScanKey".
 
