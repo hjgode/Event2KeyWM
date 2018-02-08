@@ -155,7 +155,7 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_APP_TITLE           "Event2keyWM"
+    IDS_APP_TITLE           "Event2keyWM_v2"
     IDC_EVENT2KEYWM         "EVENT2KEYWM"
 END
 

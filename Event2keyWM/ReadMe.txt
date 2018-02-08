@@ -1,20 +1,20 @@
-========================================================================
-    WIN32 APPLICATION : Event2keyWM Project Overview
-========================================================================
+# WIN32 APPLICATION : Event2keyWM Project Overview
 
 Application that rewrites the registry entries for the center scan button
-and then watches the new events to issue a Key press
+and then watches the new events to issue a Key press.
 
-##Installation
+The lower left side button will be mapped to be a scan button.
 
-Copy DEMO_MapScanKey.cab to the device and start FileBrowser to locate 
-DEMO_MapScanKey.cab. Then tap on DEMO_MapScanKey.cab to start the installation.
+## Installation
 
-After installation start the app once manually using Start-Programs-Eevent2KeyWM.
+Copy DEMO_MapScanKey_v2.cab to the device and start FileBrowser to locate 
+DEMO_MapScanKey_v2.cab. Then tap on DEMO_MapScanKey_v2.cab to start the installation.
+
+After installation start the app once manually using Start-Programs-Event2KeyWM.
 Then warm boot the device to activate the changes. The DEMO application will be
 autostarted using the Windows\StartUp folder.
 
-##Example
+## Example
 
 The default registry for the center scan button is
 
@@ -29,26 +29,27 @@ The application changes those to
 Now, whenever the center scan button is pressed, the application sees the DeltaMappedToKey event and 
 then uses keybd_event to simulate a keypress (KeyDown and KeyUp) for the defined VKEY value.
 
-##Configuration
+The lower left side button (00,91) will be mapped to Event2 and Event2 will be 
+changed to DeltaLeftScan and StateLeftScan.
+ 
+## Configuration
 
-================================================
-REGEDIT4
-[HKEY_LOCAL_MACHINE\Software\Intermec\Event2Key]
-"mapToVKEY"=dword:0000000D
-"eventName"="Event1"
-================================================
+    REGEDIT4
+    [HKEY_LOCAL_MACHINE\Software\Intermec\Event2Key]
+    "mapToVKEY"=dword:0000000D
+    "eventName"="Event1"
+
 mapToVKEY is the value of the VKEY to be fired
+
 eventName is the standard name of the event entries used by the center
 scan button
 
-##Uninstall
+## Uninstall
 
+Go to Start-Task Manager and SwithTo Event2keyWM. Then tap OK to end Event2keyWM.
+ 
 Go to Start-Settings-System-Remove Programs and remove "hsm DEMO MapScanKey".
 
-Start a registry editor and change the registry back to
+Go to Start-Settings-System and launch the Keyboard Remapper utility. Then
+select Menu-Restore Defaults.
 
-	Drivers\HID\ClientDrivers\ITCKeyboard\Layout\CN75AN5-Numeric\0001\Events\Delta:Event1=DeltaLeftScan
-	Drivers\HID\ClientDrivers\ITCKeyboard\Layout\CN75AN5-Numeric\0001\Events\State:Event1=StateLeft
-
-
-/////////////////////////////////////////////////////////////////////////////s

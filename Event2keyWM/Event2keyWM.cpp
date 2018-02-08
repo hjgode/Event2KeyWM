@@ -18,6 +18,9 @@ TCHAR regPathKeyboardEventState[255]; //Drivers\HID\ClientDrivers\ITCKeyboard\La
 TCHAR NEW_NAME_DELTA[MAX_PATH] = L"DeltaMappedToKey";
 TCHAR NEW_NAME_STATE[MAX_PATH] = L"StateMappedToKey";
 
+TCHAR NEW_NAME_STATE_LEFTSCAN[MAX_PATH] = L"StateLeftScan";
+TCHAR NEW_NAME_DELTA_LEFTSCAN[MAX_PATH] = L"DeltaLeftScan";
+
 TCHAR regAppKey[255]=L"Software\\Intermec\\Event2Key";	//where to store and retrieve App settings
 TCHAR eventName[255]=L"Event1";							//which event number to change
 TCHAR mapToVKEYName[255]=L"mapToVKEY";					//store and read VKEY to map to
@@ -48,6 +51,66 @@ HRESULT notifyDriver(){
 	else{
 		DEBUGMSG(1, (L"no kbdtools.cpl found\n"));
 	}
+	return hRes;
+}
+
+//##############################################
+#define Normal 0u /// Represents the normal plane when neither Orange or Green are selected.
+#define Orange 1u /// Represents the Orange plane, selected by the Orange key.
+#define Green  2u /// Represents the Green plane, selected by the Green key.
+
+/// Key Type.  Used to determine the primary function of the key.
+#define NormalKey  0x00u /// Key will be a normal key value.
+#define PlaneShift 0x01u /// Key will select the key plane, such as Orange or Green.
+#define NamedEvent 0x02u /// Key will trigger a predefined Named Event. 
+#define MultiKey   0x04u /// Key will trigger a predefined key macro.
+#define Modifier   0x08u /// Key will act as a modifier key, such as Shift, Control, Alt, Caps, etc. 
+#define AppLaunch  0x10u /// Key will act as a Microsoft Shell Application Launch key.
+#define Rotate     0x40u /// Key will select one of several predefined key values, such as ABC on a cell phone 2 key. 
+
+/// Key Attribute.  Used to modify the operation of the key.
+#define NoAttrib 0x00u /// Value parameter will represent a Scan Code value.
+#define Extended 0x01u /// Key is preceded by the extended 0xE0 byte.
+#define NoRepeat 0x02u /// Key will not auto repeat.
+#define Silent   0x04u /// Key press will not produce a key click.
+#define VKEY     0x08u /// Value parameter will represent a VKEY value.
+#define NOOP     0x10u /// Key will do nothing.  Disables the key.
+#define Shifted  0x20u /// Key is preceded by a left shift key before it's value is sent.
+#define NoChord  0x40u /// Multikeys will not be chorded when sent. 
+
+/// Key Modifier.  Used to set the "Sticky" value of the key and control the keyboard LEDs.
+#define NoModifier    0x00u  /// No Stickyness and no LED.
+#define StickyOnce    0x01u  /// Key remains pressed until next key press of any key.   Intended for Shift, Cap, Orange, etc.
+#define StickyPersist 0x02u  /// Key remains pressed until next key press of same key.  Intended for Shift, Cap, Orange, etc.
+#define StickyLock    0x04u  /// Key pressed twice in a row remains pressed until next key press of same key.  Otherwise like StickyOnce. Intended for Shift, Cap, Orange, etc.
+#define LED1          0x10u  /// Key will also light LED 1.
+#define LED2          0x20u  /// Key will also light LED 2.
+#define LED3          0x40u  /// Key will also light LED 3.
+//###################################################
+typedef HRESULT (*PFN_SetKey)(BYTE plane, BYTE page, BYTE usage, BYTE keyType, BYTE keyAttribute, BYTE keyModifier, BYTE value);
+PFN_SetKey SetKey=NULL;
+HRESULT setKeyLowerLeftSideToEvent2(){
+	HRESULT hRes=-99;
+	DEBUGMSG(1, (L"setKeyLowerLeftSideToEvent2...\n"));
+	if(h_kbdtools==NULL)
+		h_kbdtools=LoadLibrary(L"kbdtools.cpl");
+	if(h_kbdtools){
+		if(SetKey==NULL){
+			SetKey = (PFN_SetKey)GetProcAddress(h_kbdtools, L"SetKey");
+		}
+		if(SetKey){
+			for(int iPlane=0; iPlane<3; iPlane++){
+				hRes=SetKey(iPlane, 0x07, 0x91, NamedEvent, NoRepeat, NoModifier, 0x02);
+				DEBUGMSG(1, (L"SetKey for Plane %i returned %i\n", iPlane, hRes));
+			}			
+		}
+		else
+			DEBUGMSG(1, (L"no SetKey found\n"));
+	}
+	else{
+		DEBUGMSG(1, (L"no kbdtools.cpl found\n"));
+	}
+	DEBUGMSG(1, (L"setKeyLowerLeftSideToEvent2...DONE\n"));
 	return hRes;
 }
 
@@ -86,7 +149,7 @@ void patchEvents(){
 	wsprintf(regPathKeyboardEventState, L"%s\\Events\\State", regCurrentLayoutPath);//Drivers\HID\ClientDrivers\ITCKeyboard\Layout\CN75AN5-Numeric\0001\Events\State
 	DEBUGMSG(1, (L"Delta location='%s', State location='%s'\n", regPathKeyboardEventDelta, regPathKeyboardEventState));
 	BOOL bNeedsReboot=FALSE;
-	//write new delata event name?
+	//write new delata event1 name?
 	OpenKey(regPathKeyboardEventDelta);
 	//test if change needed
 	if(RegReadStr(eventName, tempStr)==0){
@@ -100,7 +163,21 @@ void patchEvents(){
 		RegWriteStr(eventName, NEW_NAME_DELTA);
 		bNeedsReboot=TRUE;
 	}
-	//write new state event name?
+	//+++Event2 change to DeltaLeftScan
+	//test if change needed
+	if(RegReadStr(L"Event2", tempStr)==0){
+		if(wcscmp(tempStr, NEW_NAME_DELTA_LEFTSCAN)!=0){
+			//write new delta event name
+			RegWriteStr(L"Event2", NEW_NAME_DELTA_LEFTSCAN);
+			bNeedsReboot=TRUE;
+		}
+	}else{
+		//write new delta event name
+		RegWriteStr(L"Event2", NEW_NAME_DELTA_LEFTSCAN);
+		bNeedsReboot=TRUE;
+	}
+
+	//write new state event1 name?
 	OpenKey(regPathKeyboardEventState);
 	if(RegReadStr(eventName, tempStr)==0){
 		if(wcscmp(tempStr, NEW_NAME_STATE)!=0){
@@ -113,6 +190,23 @@ void patchEvents(){
 		RegWriteStr(eventName, NEW_NAME_STATE);
 		bNeedsReboot=TRUE;
 	}
+	//write new state event2 name?
+	if(RegReadStr(L"Event2", tempStr)==0){
+		if(wcscmp(tempStr, NEW_NAME_STATE_LEFTSCAN)!=0){
+			//write new delta event name
+			RegWriteStr(L"Event2", NEW_NAME_STATE_LEFTSCAN);
+			bNeedsReboot=TRUE;
+		}
+	}else{
+		//write new delta event name
+		RegWriteStr(L"Event2", NEW_NAME_STATE_LEFTSCAN);
+		bNeedsReboot=TRUE;
+	}
+	
+	//map lower left side button to the Event2 entries
+	if(setKeyLowerLeftSideToEvent2()!=ERROR_SUCCESS)
+		MessageBox(g_hWnd, L"Keyboard mapping lower left side failed. KbdTools installed?", L"ERROR", MB_ICONEXCLAMATION|MB_OK);
+
 	DEBUGMSG(1, (L"patchEvents...DONE\n"));
 	if(bNeedsReboot){
 		HRESULT hRes=notifyDriver();
@@ -361,7 +455,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     static SHACTIVATEINFO s_sai;
 	
     switch (message) 
-    {
+    {		
         case WM_COMMAND:
             wmId    = LOWORD(wParam); 
             wmEvent = HIWORD(wParam); 
@@ -372,7 +466,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     DialogBox(g_hInst, (LPCTSTR)IDD_ABOUTBOX, hWnd, About);
                     break;
                 case IDM_OK:
-                    SendMessage (hWnd, WM_CLOSE, 0, 0);				
+					if(MessageBox(g_hWnd, L"Really end app?", L"EXIT", MB_ICONQUESTION|MB_YESNO)==IDYES)
+					{
+						SendMessage (hWnd, WM_CLOSE, 0, 0);				
+					}
                     break;
                 default:
                     return DefWindowProc(hWnd, message, wParam, lParam);
@@ -413,12 +510,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             EndPaint(hWnd, &ps);
             break;
         case WM_DESTROY:
-            CommandBar_Destroy(g_hWndMenuBar);
-			
-			stopThread();
-			Sleep(1000);
+				CommandBar_Destroy(g_hWndMenuBar);
+				
+				stopThread();
+				Sleep(1000);
 
-            PostQuitMessage(0);
+				PostQuitMessage(0);
             break;
 
         case WM_ACTIVATE:
